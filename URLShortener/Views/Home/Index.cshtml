@@ -1,0 +1,104 @@
+﻿
+@{
+    ViewBag.Title = "Home Page";
+}
+
+
+@*Body*@
+<fieldset>
+    <div class="form-group">
+        <div class="editor-label">@Html.Label("URL")  </div>
+        <div class="editor-field">@Html.TextBox("longURL", null, new { @class = "form-control", id = "urlTxt" })  </div> <br />
+        <div class="form-group">
+            <div class="g-recaptcha" data-sitekey="6LdmtQ0UAAAAAK0goI1qUdYMNieuXlAludCIZM4d"></div>
+            <span class="text-danger">@ViewBag.CaptchaErrorMessage</span>
+
+        </div>
+        <input type="submit" class="btn btn-primary" value="Shorten URL" id="shortenUrlBtn" /> <br />
+     
+        <div id="resultModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Your Short URL</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p><h3><span id="labelResult"></span></h3></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="closbtn">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        </div>
+</fieldset>
+    
+ @*Section Scripts*@
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<script type="text/javascript">
+
+    $("#shortenUrlBtn").click(function () {
+        var url = $('#urlTxt').val();
+        var labelResult = $('#labelResult').val();
+
+        // check if the given url is valid
+        if (!isValidUrl(url)) {
+            alert('Invalid URL')
+            return;
+        }
+
+        // check the captcha response validation
+        if (!isValidCaptcha()) {
+            alert('Please ckech recaptcha input ...')
+            return;
+        }
+
+        // every thinks is good , so we Go ...
+        $.ajax({
+            url: '/Home/urlShorter/',
+            type: 'POST',
+            data: {
+                url: url,
+            },
+            success: function (data) {
+                $('#resultModal').modal('show');
+                $('#labelResult').addClass('label label-default')
+                $('#labelResult').text(data.Result)
+                $("#closbtn").click(function () {
+                    window.location.href = '/Home/Index/'
+                });
+            }
+        });
+
+        function isValidCaptcha() {
+            var captchaResponse = grecaptcha.getResponse();
+            if (captchaResponse == "") {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        function isValidUrl(url) {
+            var isValidUrl = true;
+            $.ajax({
+                async: false,
+                url: url,
+                statusCode: {
+                    404: function (response) {
+                        isValidUrl = false;
+                    }
+                }
+            });
+            return isValidUrl;
+        }
+    });
+
+
+
+</script>
